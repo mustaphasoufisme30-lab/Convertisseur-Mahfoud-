@@ -15,22 +15,17 @@ jobs:
         run: npm install --legacy-peer-deps
       - name: Build
         run: |
-          npm run build || npx vite build
-          ls -la
-          ls -la dist || ls -la build
+          npm run build
+          ls -la dist
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      - uses: android-actions/setup-android@v3
       - name: Make APK
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
-          WEB_DIR="dist"
-          if [ ! -d "dist" ]; then WEB_DIR="build"; fi
-          echo "Using $WEB_DIR"
-          npx cap init ConvertisseurMahfoud com.mahfoud.app --web-dir=$WEB_DIR --npm-client npm
-          npx cap add android
+          npx cap init ConvertisseurMahfoud com.mahfoud.app --web-dir=dist --npm-client npm || true
+          npx cap add android || true
           npx cap copy android
           cd android
           chmod +x gradlew
