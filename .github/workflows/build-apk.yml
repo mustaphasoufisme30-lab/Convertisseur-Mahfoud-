@@ -1,1 +1,41 @@
+name: Build APK
+on:
+  push:
+    branches: [main, master]
 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        run: npm install --legacy-peer-deps
+      - name: Build
+        run: |
+          npm run build || npx vite build
+          ls -la
+          ls -la dist || ls -la build
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Make APK
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android --legacy-peer-deps
+          WEB_DIR="dist"
+          if [ ! -d "dist" ]; then WEB_DIR="build"; fi
+          echo "Using $WEB_DIR"
+          npx cap init ConvertisseurMahfoud com.mahfoud.app --web-dir=$WEB_DIR --npm-client npm
+          npx cap add android
+          npx cap copy android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Convertisseur-Mahfoud-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
